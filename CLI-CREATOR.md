@@ -360,19 +360,43 @@ cli({
 
 ## Step 4: 测试
 
-### 快速测试
+> **⚠️ 构建通过 ≠ 功能正常**。`npm run build` 只验证 TypeScript / YAML 语法，不验证运行时行为。  
+> 每个新命令 **必须实际运行** 并确认输出正确后才算完成。
+
+### 必做清单
 
 ```bash
-# 公开 API（毫秒级响应）
-opencli v2ex hot --limit 3
+# 1. 构建（确认语法无误）
+npm run build
 
-# 浏览器命令（需 Chrome + MCP Bridge）
-opencli bilibili hot --limit 3
+# 2. 确认命令已注册
+opencli list | grep mysite
 
-# 带参数
-opencli bilibili search --keyword "rust" --limit 3
-opencli zhihu search --keyword "AI" --limit 5
+# 3. 实际运行命令（最关键！）
+opencli mysite hot --limit 3 -v        # verbose 查看每步数据流
+opencli mysite hot --limit 3 -f json   # JSON 输出确认字段完整
 ```
+
+### tap 步骤调试（intercept 策略专用）
+
+tap 步骤依赖正确的 Pinia store name 和 action name。如果不确定：
+
+```bash
+# 运行 evaluate 探索 Pinia store 结构
+opencli evaluate "(() => {
+  const app = document.querySelector('#app')?.__vue_app__;
+  const pinia = app?.config?.globalProperties?.\$pinia;
+  return [...pinia._s.keys()];
+})()"
+```
+
+tap 的错误提示会列出可用的 actions，例如：
+```
+{ error: 'Action not found: fetchData on store user',
+  hint: 'Available: getProfile, updateInfo, logout' }
+```
+
+根据提示修正 action name 即可。
 
 ### Verbose 模式
 
